@@ -1,6 +1,15 @@
 # vlm-pca-exercise
 An implementation of principle component analysis on popular VLMs including [QWEN3-VL](https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct), [LLaVA-v1.5](https://huggingface.co/liuhaotian/llava-v1.5-7b), and [MolMo2](https://huggingface.co/allenai/Molmo2-8B). We demonstrate the formation of meaningful object count-based structures in later intermediate layers through reasoning when the VLM is extracting the count of an object.
 
+file/dirs structure:
+- `Raphi_Task.ipynb`: notebook responsible for running evaluation on dataset + saving selected activations.
+- `Raphi_Task_Results.ipynb`: notebook responible for PCA analysis and things related to discussion.
+- `Raphi_Task_Data`: directory containing all the saved results. Subfolders for the three VLMs.
+  - `results.csv`: CSV containing results from evaluation (including counts 1-10). One per VLM directory.
+  - `activations.csv`: CSV containing activations of VLM when dealing with counts 1-5. One per VLM directory.
+  - `decoder_fivelayers_pca.png`: PCA plot of the five layers in the decoder, colored by object counts.
+  - other PNGs: PCA plots of the activations of various layers. The filenames indicate the layer name and the token id used ('average' if averaged across sequence)
+
 # Brief Model Details
 - Architectures
   - All models generally use the same conventional VLM structure of a vision encoder (all three use a ViT-like encoder) that produces visual features/embeddings, which are transformed to language space and used as typical token embeddings in the transformer decoder. Some specialized positional embeddings like RoPE are applied in order to encode spatial information.
