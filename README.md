@@ -35,8 +35,8 @@ Because of this, we chose to perform PCA using intermmediate activations at the 
 ## Different Layers have different PCA plots
 <div align="center">
   
-  <img width="1000" height="811" alt="image" src="https://github.com/user-attachments/assets/d9dc8d09-6c6e-48d7-aa63-f610174c2828" />
-  <img width="666" height="811" alt="image" src="https://github.com/user-attachments/assets/dd9aa362-2738-441e-b632-d409bb095d71" />
+  <img width="900" height="811" alt="image" src="https://github.com/user-attachments/assets/d9dc8d09-6c6e-48d7-aa63-f610174c2828" />
+  <img width="600" height="811" alt="image" src="https://github.com/user-attachments/assets/dd9aa362-2738-441e-b632-d409bb095d71" />
   
   In reading order: hidden states of blocks 0, 1, 13, 20, and 27, respectively. This is for the Qwen model.
   
