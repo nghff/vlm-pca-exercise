@@ -72,6 +72,8 @@ The dimensions of the activations at the decoder layers are $(T, D)$, where $T$ 
   
 </div>
 
+We found that decoder-layer representations of samples with identical object counts progressively form emergent clusters starting around the mid-layers of the decoder, and they become largely separated by the final layer.
+
 # Differentiating Layers
 We will describe the general functions of different layers in VLMs. All three use a similar architecture or patterns of layers, so we will describe each component once.
 - Vision Encoder: The Vision Encoder does the work of extracting useful visual information in the form of visual embeddings. In all three models, it is a ViT. (Fascinatingly, to perform decently, the vision encoder does not necessarily need to recieve information from the language prompt in order to decide useful information)
