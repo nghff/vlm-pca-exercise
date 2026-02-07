@@ -30,25 +30,11 @@ On the other hand, even if the decoder is not finetuned on this counting task, i
 The motivation for picking first two, middle, late, and final layers from the decoder is that the separation may happen gradually or suddenly, and we are curious to see the process from start to end through the entier decoder.
 
 ## Choosing Sequence Idx
-Note that in a decoder-only transformer, the language-model (LM) head is applied **position-wise**: each token position \(t\) produces a hidden state \(h_t\) that is mapped to logits used to predict the **next** token \(x_{t+1}\). While training is parallelized across positions, tokens are not independent—each position attends to previous tokens under a causal mask. During autoregressive generation, the next token is predicted from the hidden state at the **final non-padding position**. Because we use `tokenizer.padding_side = "left"`, padding tokens appear on the left, so the final non-pad token is at the **last sequence index**.
+Note that in a decoder-only transformer, the language-model (LM) head is applied **position-wise**: each token position $t$ produces a hidden state $h_t$ that is mapped to logits used to predict the **next** token $x_{t+1}$. While training is parallelized across positions, tokens are not independent—each position attends to previous tokens under a causal mask. During autoregressive generation, the next token is predicted from the hidden state at the **final non-padding position**. Because we use `tokenizer.padding_side = "left"`, padding tokens appear on the left, so the final non-pad token is at the **last sequence index**.
 
 Since the model's count prediction is expressed through the next-token logits at this final position, the effects of examples having different object counts will be more noticable at this index. Therefore, 
 
 Because of this, we chose to perform PCA on intermediate activations at the last sequence index to maximize the chance that the projection separates samples along count-related variation.
-
-## Dimensionality Reductions
-
-<div align="center">
-  
-  | Model | Pre-PCA | Post_PCA |
-  | --- | --- | --- |
-  | Qwen3-VL-2B-Instruct | 2048 | 2 |
-  | llava-1.5-7b-hf | 4096 | 2 |
-  | Molmo2-8B | 4096 | 2 |
-  
-Table of dimension sizes before and after PCA projection.
-
-</div>
 
 ## Alternative Sequence Ids
 The PCA plots for these can also be found in this github repo.
@@ -59,6 +45,22 @@ The PCA plots for these can also be found in this github repo.
 3. Average over all sequence ids - this would involve taking an average of hidden state embeddings over all sequence indicies.
   a. Pros: The resulting average is more stable and less prone to outliers and noise. It can be interesting to see the global patterns in how the VLM predicts every token in the seqeuence.
   b. Cons: Any one signal from a single position will be washed out and mixed with others. The result can be less useful for what we do when the most important information for the object counting is likely to be at the last position.
+
+## Dimensions
+
+<div align="center">
+  
+  | Model | Pre-PCA | Post_PCA |
+  | --- | --- | --- |
+  | Qwen3-VL-2B-Instruct | 2048 | 2 |
+  | llava-1.5-7b-hf | 4096 | 2 |
+  | Molmo2-8B | 4096 | 2 |
+  
+Table of single token position activation dimension sizes before and after PCA projection.
+
+The dimensions of the activations at the decoder layers are $(T, D)$, where $T$ is the number tokens in a sequence, and $D$ is the internal dimension of the transformer token embeddings. When fed into PCA, only one token index is chosen, so it will be shape $(D)$. 
+
+</div>
 
 ## Different Layers have different PCA plots
 <div align="center">
