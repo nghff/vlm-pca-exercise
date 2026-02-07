@@ -58,9 +58,9 @@ The PCA plots for these can also be found in this github repo.
   
 Table of single token position activation dimension sizes before and after PCA projection.
 
-The dimensions of the activations at the decoder layers are $(T, D)$, where $T$ is the number tokens in a sequence, and $D$ is the internal dimension of the transformer token embeddings. When fed into PCA, only one token index is chosen, so it will be shape $(D)$. 
-
 </div>
+
+The dimensions of the activations at the decoder layers are $(T, D)$, where $T$ is the number tokens in a sequence, and $D$ is the internal dimension of the transformer token embeddings. When fed into PCA, the activation at a single token index is chosen, and thus it will be shape $(D)$. 
 
 ## Different Layers have different PCA plots
 <div align="center">
