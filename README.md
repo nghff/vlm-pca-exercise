@@ -4,16 +4,16 @@ An implementation of principle component analysis on popular VLMs including [QWE
 # Brief Model Details
 - Architectures
   - All models generally use the same conventional VLM structure of a vision encoder (all three use a ViT-like encoder) that produces visual features/embeddings, which are transformed to language space and used as typical token embeddings in the transformer decoder. Some specialized positional embeddings like RoPE are applied in order to encode spatial information.
-  - Interestingly, Qwen is a special with a 'deepstack merger' that takes visual tokens from three layers (early, middle, late) in the vision encoder and feeds them through extra transformer layers. The information is incorporated later in the decoder via additive residual connections to reinforce helpful visual information.
+  - Interestingly, Qwen is special and has a 'deepstack merger' that takes visual tokens from three layers (early, middle, late) in the vision encoder and feeds them through extra transformer layers. The information is incorporated later in the decoder via additive residual connections to reinforce or further extract helpful visual information.
 - Layers
 
 <div align="center">
   
-| Model | Vision Encoder Blocks | Language Decoder Blocks | Total Layers (nested double counting) |
-| --- | --- | --- | --- |
-| Qwen3-VL-2B-Instruct | 24 | 28 | TODO |
-| llava-1.5-7b-hf | 24 | 32 | 725 |
-| Molmo2-8B | 25 | 36 | 819 |
+  | Model | Vision Encoder Blocks | Language Decoder Blocks | Total Layers (nested double counting) |
+  | --- | --- | --- | --- |
+  | Qwen3-VL-2B-Instruct | 24 | 28 | TODO |
+  | llava-1.5-7b-hf | 24 | 32 | 725 |
+  | Molmo2-8B | 25 | 36 | 819 |
 
 </div>
 
@@ -33,8 +33,14 @@ Note that the classification head of a decoder transformer is tokenwise as a byp
 Because of this, we chose to perform PCA using intermmediate activations at the last sequence index to get the most relevant results.
 
 ## Different Layers have different PCA plots
-<img width="1009" height="3511" alt="image" src="https://github.com/user-attachments/assets/ff9aa3b9-993c-416e-908c-187a2d4c74a1" />
-
+<div align="center">
+  
+  <img width="1000" height="811" alt="image" src="https://github.com/user-attachments/assets/d9dc8d09-6c6e-48d7-aa63-f610174c2828" />
+  <img width="666" height="811" alt="image" src="https://github.com/user-attachments/assets/dd9aa362-2738-441e-b632-d409bb095d71" />
+  
+  In reading order: hidden states of blocks 0, 1, 13, 20, and 27, respectively. This is for the Qwen model.
+  
+</div>
 
 # Differentiating Layers
 We will describe the general functions of different layers in VLMs. All three use a similar architecture or patterns of layers, so we will describe each component once.
