@@ -89,7 +89,7 @@ Table of single token position activation dimension sizes before and after PCA p
 
 </div>
 
-The dimensions of the activations at the decoder layers are $(T, D)$, where $T$ is the number tokens in a sequence, and $D$ is the internal dimension of the transformer token embeddings. When fed into PCA, the activation at a single token index is chosen, and thus it will be shape $(D)$. 
+The dimensions of the activations at the decoder layers are $(T, D)$, where $T$ is the number tokens in a sequence, and $D$ is the internal dimension of the transformer token embeddings (omitting batch dimension). When fed into PCA, the activation at a single token index is chosen, and thus it will be shape $(D)$. 
 
 ## Emergence of Clusters by Count
 <div align="center">
