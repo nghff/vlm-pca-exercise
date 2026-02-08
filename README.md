@@ -1,19 +1,19 @@
 # vlm-pca-exercise
-An implementation of principle component analysis on popular VLMs including [QWEN3-VL](https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct), [LLaVA-v1.5](https://huggingface.co/liuhaotian/llava-v1.5-7b), and [MolMo2](https://huggingface.co/allenai/Molmo2-8B). We demonstrate the formation of meaningful object count-based structures in later intermediate layers through reasoning when the VLM is extracting the count of an object.
+An implementation of principle component analysis on popular VLMs including [Qwen3-VL-2B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct), [LLaVA-v1.5-7b](https://huggingface.co/liuhaotian/llava-v1.5-7b), and [MolMo2-8B](https://huggingface.co/allenai/Molmo2-8B). We demonstrate the formation of meaningful object count-based structures in later intermediate layers through reasoning when the VLM is extracting the count of an object.
 
 file/dirs structure:
 - `Raphi_Task.ipynb`: notebook responsible for running evaluation on dataset + saving selected activations.
 - `Raphi_Task_Results.ipynb`: notebook responible for PCA analysis and things related to discussion.
 - `Raphi_Task_Data`: directory containing all the saved results. Subfolders for the three VLMs.
   - `results.csv`: CSV containing results from evaluation (including counts 1-10). One per VLM directory.
-  - `activations.csv`: CSV containing activations of VLM when dealing with counts 1-5. One per VLM directory.
+  - `activations_data.csv`: CSV containing activations of VLM when dealing with counts 1-5. One per VLM directory.
   - `decoder_fivelayers_pca.png`: PCA plot of the five layers in the decoder, colored by object counts.
   - other PNGs: PCA plots of the activations of various layers. The filenames indicate the layer name and the token id used ('average' if averaged across sequence)
 
 # Brief Model Details
 - Architectures
-  - All models generally use the same conventional VLM structure of a vision encoder (all three use a ViT-like encoder) that produces visual features/embeddings, which are transformed to language space and used as typical token embeddings in the transformer decoder. Some specialized positional embeddings like RoPE are applied in order to encode spatial information.
-  - Interestingly, Qwen is special and has a 'deepstack merger' that takes visual tokens from three layers (early, middle, late) in the vision encoder and feeds them through extra transformer layers. The information is incorporated later in the decoder via skip connections to reinforce or further extract helpful visual information.
+  - All models generally use the same conventional VLM structure of a vision encoder (all three use a ViT-like encoder) that produces visual features/embeddings, which are transformed to language space and used as typical token embeddings in the transformer decoder. Some specialized positional embeddings like MRoPE are applied in the decoder in order to encode spatial information.
+  - Interestingly, Qwen is special and has DeepStack Integration, which takes visual tokens from three layers (early, middle, late) in the vision encoder and feeds them through extra transformer layers. The information is incorporated later in the decoder via skip connections to reinforce or further extract helpful visual information.
 - Layer counts
 
 <div align="center">
@@ -28,7 +28,29 @@ Table of block counts and total layers. The total modules may double count becau
 
 </div>
 
+# Evaluating the Models
+
+## Dataset Quirks
+
+The dataset used for evaluation is [PixMo-Count](https://huggingface.co/datasets/allenai/pixmo-count/viewer/default/test). Note that the original test split is "human-verified and only contain counts from 2 to 10."
+
+## Evaluation Results
+
+<div align="center">
+
+  | Model        | Accuracy | Mean Error | MSE  |
+  |--------------|----------|------------|------|
+  | Qwen3-VL-2B  | 62.8%    | 0.57       | 1.39 |
+  | LLaVA-1.5-7B | 33.0%    | 1.54       | 5.32 |
+  | MolMo2-8B    | 74.4%    | 0.37       | 1.02 |
+
+</div>
+
+Table of evaluation results over counts 0-10 (really, 2-10 due to counts in original set).
+
 # PCA Methodology and Observations
+For simplicity, we only consider counts 0-5 (really, 2-5) for the PCA analysis.
+
 ## Choosing Layer Activations
 We initially chose to gather intermediate activations from five layers: first two, middle, late, and final blocks in the decoder. Other activations from decoder attention weights and early, middle, and late vision blocks were gathered. All images can be viewed in the github repo.
 
@@ -71,20 +93,28 @@ Table of single token position activation dimension sizes before and after PCA p
 
 The dimensions of the activations at the decoder layers are $(T, D)$, where $T$ is the number tokens in a sequence, and $D$ is the internal dimension of the transformer token embeddings. When fed into PCA, the activation at a single token index is chosen, and thus it will be shape $(D)$. 
 
-## Different Layers have different PCA plots
+## Emergence of Clusters by Count
 <div align="center">
   
   <img width="100%" height="811" alt="image" src="https://github.com/user-attachments/assets/d9dc8d09-6c6e-48d7-aa63-f610174c2828" />
   <img width="66%" height="811" alt="image" src="https://github.com/user-attachments/assets/dd9aa362-2738-441e-b632-d409bb095d71" />
   
-  In reading order: hidden states of blocks 0, 1, 13, 20, and 27, respectively. This is for the Qwen model.
+  In reading order: hidden states of blocks 0, 1, 13, 20, and 27, respectively. This is for the Qwen model. (Note that the scale for counts ranges from 2-5 rather than 0-5 because the original test split was missing examples with counts 0 or 1.)
   
 </div>
 
 We found that decoder-layer representations of samples with identical object counts progressively form emergent clusters starting around the mid-layers of the decoder, and they become largely separated by the final layer.
 
-# Differentiating Layers
-We will describe the general functions of different layers in VLMs. All three use a similar architecture or patterns of layers, so we will describe each component once.
+## PCA Differences Between Layers
+
+The progression of the PCA plot through the decoder layers is as follows:
+1. In early decoder blocks 0 and 1, the PCA plot lacks much structure with colors intermixed, as the model has only just begun to combine visual and language information. There is no outstanding signal for the count, and thus the PCA is not able to separate the colors.
+2. In middle/late decoder blocks (13 and 20 for Qwen), the PCA plot begins to show separation of colors, as the model begins to form higher level features, possibly concerning the object counts. There is a stronger signal from the count, and thus more variance is coming from the counts. However, the signal is stil mixed with other variation. The separation is noticeably more obvious in the late block than in the middle block.
+3. In the final decoder block (27 for Qwen), the PCA plot shows an effective separation of the colors, consistent with the model's representation at the last token position becoming strongly aligned with the information needed to produce the next token (the count). Thus, a good amount of the variance is explained by the count, and the PCA is able to separate the colors well.
+
+# Functional Differences Between Layers
+We will briefly describe the general differences between layers in VLMs. All three use a similar architecture or patterns of layers, so we will describe each component once.
+
 - Vision Encoder: The Vision Encoder does the work of extracting useful visual information in the form of visual embeddings. In all three models, it is a ViT. (Fascinatingly, to perform decently, the vision encoder does not necessarily need to recieve information from the language prompt in order to decide useful information)
   - Vision Block: In all three models, there is a repeating group of layers that is generally a 'vision block'. Part of the ViT, these are transformer blocks with all the usual multi-head attention, except now it operates on patch embeddings rather than token embeddings. This allows image patches to 'attend' to one another like tokens can in regular transformers.
   - Merger: There is a final part of the Vision Encoder that maps the output embeddings to a language space to be used by the decoder.
