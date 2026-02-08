@@ -1,9 +1,9 @@
 # vlm-pca-exercise
-An implementation of principle component analysis on popular VLMs including [Qwen3-VL-2B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct), [LLaVA-v1.5-7b](https://huggingface.co/liuhaotian/llava-v1.5-7b), and [MolMo2-8B](https://huggingface.co/allenai/Molmo2-8B). We demonstrate the formation of meaningful object count-based structures in later intermediate layers through reasoning when the VLM is extracting the count of an object.
+An implementation of principal component analysis on popular VLMs including [Qwen3-VL-2B-Instruct](https://huggingface.co/Qwen/Qwen3-VL-2B-Instruct), [LLaVA-v1.5-7b](https://huggingface.co/liuhaotian/llava-v1.5-7b), and [MolMo2-8B](https://huggingface.co/allenai/Molmo2-8B). We demonstrate the formation of meaningful object count-based structures in later intermediate layers through reasoning when the VLM is extracting the count of an object.
 
 file/dirs structure:
 - `Raphi_Task.ipynb`: notebook responsible for running evaluation on dataset + saving selected activations.
-- `Raphi_Task_Results.ipynb`: notebook responible for PCA analysis and things related to discussion.
+- `Raphi_Task_Results.ipynb`: notebook responsible for PCA analysis and things related to discussion.
 - `Raphi_Task_Data`: directory containing all the saved results. Subfolders for the three VLMs.
   - `results.csv`: CSV containing results from evaluation (including counts 1-10). One per VLM directory.
   - `activations_data.csv`: CSV containing activations of VLM when dealing with counts 1-5. One per VLM directory.
@@ -58,10 +58,10 @@ The motivation for not PCA-ing on intermediate activations from the vision encod
 
 On the other hand, even if the decoder is not finetuned on this counting task, intermediate activations may exhibit meaningful separation when PCA'ed. This is because, unlike the visual encoder, the decoder can attend to ALL tokens, including language tokens. Importantly, the language embeddings contain information about the counting task, and the decoder transformer may reason through extracting the relevant 'count features' from the visual embeddings. Thus, we may want to try PCA-ing the intermediate activations from the decoder to see what interesting structures may arise from reasoning on a counting task.
 
-The motivation for picking first two, middle, late, and final layers from the decoder is that the separation may happen gradually or suddenly, and we are curious to see the process from start to end through the entier decoder.
+The motivation for picking first two, middle, late, and final layers from the decoder is that the separation may happen gradually or suddenly, and we are curious to see the process from start to end through the entire decoder.
 
 ## Choosing Sequence Idx
-Note that in a decoder-only transformer, the language-model (LM) head is applied position-wise: each token position $t$ produces a hidden state $h_t$ that is mapped to logits used to predict the **next** token $x_{t+1}$. Thus, during autoregressive generation, the next token is predicted from the hidden state at the **final non-padding position**. Because we use `tokenizer.padding_side = "left"`, padding tokens appear on the left, so the final non-pad token is at the **last sequence index**. Since the model's count prediction is expressed through the next-token logits at this final position, the effects of examples having different object counts will be more noticable at this index. 
+Note that in a decoder-only transformer, the language-model (LM) head is applied position-wise: each token position $t$ produces a hidden state $h_t$ that is mapped to logits used to predict the **next** token $x_{t+1}$. Thus, during autoregressive generation, the next token is predicted from the hidden state at the **final non-padding position**. Because we use `tokenizer.padding_side = "left"`, padding tokens appear on the left, so the final non-pad token is at the **last sequence index**. Since the model's count prediction is expressed through the next-token logits at this final position, the effects of examples having different object counts will be more noticeable at this index. 
 
 Because of this, we chose to perform PCA on intermediate activations at the last sequence index to maximize the chance that the projection separates samples along count-related variation.
 
@@ -71,8 +71,8 @@ The PCA plots for these can also be found in this github repo.
   a. Pros: More directly targets the representation tied to the queried object, which can make clusters reflect specific object-related features rather than generic answer-generation dynamics. It could also be interesting to see how the different object tokens contribute to clustering in PCA plots.
   b. Cons: The index of the object token in the prompt is delicate (this is not really a concern in this case with a fixed prompt structure), and some object words may be split into more than one object tokens.
 
-3. Average over all sequence ids - this would involve taking an average of hidden state embeddings over all sequence indicies.
-  a. Pros: The resulting average is more stable and less prone to outliers and noise. It can be interesting to see the global patterns in how the VLM predicts every token in the seqeuence.
+3. Average over all sequence ids - this would involve taking an average of hidden state embeddings over all sequence indices.
+  a. Pros: The resulting average is more stable and less prone to outliers and noise. It can be interesting to see the global patterns in how the VLM predicts every token in the sequence.
   b. Cons: Any one signal from a single position will be washed out and mixed with others. The result can be less useful for what we do when the most important information for the object counting is likely to be at the last position.
 
 ## Dimensions
