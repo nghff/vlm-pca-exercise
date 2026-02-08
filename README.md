@@ -61,9 +61,7 @@ On the other hand, even if the decoder is not finetuned on this counting task, i
 The motivation for picking first two, middle, late, and final layers from the decoder is that the separation may happen gradually or suddenly, and we are curious to see the process from start to end through the entier decoder.
 
 ## Choosing Sequence Idx
-Note that in a decoder-only transformer, the language-model (LM) head is applied **position-wise**: each token position $t$ produces a hidden state $h_t$ that is mapped to logits used to predict the **next** token $x_{t+1}$. While training is parallelized across positions, tokens are not independent—each position attends to previous tokens under a causal mask. During autoregressive generation, the next token is predicted from the hidden state at the **final non-padding position**. Because we use `tokenizer.padding_side = "left"`, padding tokens appear on the left, so the final non-pad token is at the **last sequence index**.
-
-Since the model's count prediction is expressed through the next-token logits at this final position, the effects of examples having different object counts will be more noticable at this index. Therefore, 
+Note that in a decoder-only transformer, the language-model (LM) head is applied position-wise: each token position $t$ produces a hidden state $h_t$ that is mapped to logits used to predict the **next** token $x_{t+1}$. Thus, during autoregressive generation, the next token is predicted from the hidden state at the **final non-padding position**. Because we use `tokenizer.padding_side = "left"`, padding tokens appear on the left, so the final non-pad token is at the **last sequence index**. Since the model's count prediction is expressed through the next-token logits at this final position, the effects of examples having different object counts will be more noticable at this index. 
 
 Because of this, we chose to perform PCA on intermediate activations at the last sequence index to maximize the chance that the projection separates samples along count-related variation.
 
